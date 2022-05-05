@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <chapter xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://docbook.org/ns/docbook" xml:id="ch-repl">
     <info>
       <title>Data Replication, Synchronization and Transformation Services</title>
@@ -6,12 +6,9 @@
         <para>This chapter describes how to replicate data between Virtuoso and non-Virtuoso servers.</para>
         <para>
 The material in this chapter covers the programmatic means of performing
-these  operations.  You can also use the graphical interface to do
-replication and synchronization.  This is covered in the Replication &amp;
-Synchronization section
-
-   of the Visual Server Administration
-Interface chapter.
+these operations. Note, you can also use the Conductor Admin Interface to manage and operate
+replication and synchronization, as covered in the Replication &amp;
+Synchronization section of the Visual Server Administration Interface chapter.
 </para>
       </abstract>
     </info>
@@ -2105,26 +2102,50 @@ An entry to call purger is inserted (or updated) into SYS_SCHEDULED_EVENT
 after each modification of purger settings for an account (from Admin UI)
 or after each successful run of repl_purge() for this account.
 </para>
-      </section>
-      <section xml:id="trxobj">
-        <title>Objects created by transactional replication</title>
-        <para>Virtuoso creates triggers "&lt;name&gt;_I",
-  "&lt;name&gt;_U" and "&lt;name&gt;_D" for every published table.
-  On subscriber "DB"."DBA"."SYS_REPL_ACCOUNTS" table and
-  "DB"."DBA"."TP_ITEM" view are attached from publisher as
-  "DB"."&lt;dsn&gt;"."SYS_REPL_ACCCOUNTS" and "DB"."&lt;dsn&gt;"."TP_ITEM"
-  respectively.</para>
-        <para>If publication is updateable Virtuoso additionally creates
-  the following objects:
-  <simplelist type="vert"><member>"&lt;qual&gt;"."&lt;owner&gt;"."replcr_&lt;name&gt;_I",
-    "&lt;qual&gt;"."&lt;owner&gt;"."replcr_&lt;name&gt;_U" and
-    "&lt;qual&gt;"."&lt;owner&gt;"."replcr_&lt;name&gt;_D" procedures
-    for every published table. These procedures are used for conflict
-    resolution.</member><member>Triggers "&lt;name&gt;_I", "&lt;name&gt;_U" and "&lt;name&gt;_D"
-    for every subscribed table.</member></simplelist>
+</section>
+    <section xml:id="trxobj">
+            <title>Objects created by transactional replication</title>
+            <para>Virtuoso creates triggers "&lt;name&gt;_I",
+    "&lt;name&gt;_U" and "&lt;name&gt;_D" for every published table.
+    On subscriber "DB"."DBA"."SYS_REPL_ACCOUNTS" table and
+    "DB"."DBA"."TP_ITEM" view are attached from publisher as
+    "DB"."&lt;dsn&gt;"."SYS_REPL_ACCCOUNTS" and "DB"."&lt;dsn&gt;"."TP_ITEM"
+    respectively.</para>
+            <para>If publication is updateable Virtuoso additionally creates
+    the following objects:
+    <simplelist type="vert"><member>"&lt;qual&gt;"."&lt;owner&gt;"."replcr_&lt;name&gt;_I",
+        "&lt;qual&gt;"."&lt;owner&gt;"."replcr_&lt;name&gt;_U" and
+        "&lt;qual&gt;"."&lt;owner&gt;"."replcr_&lt;name&gt;_D" procedures
+        for every published table. These procedures are used for conflict
+        resolution.</member><member>Triggers "&lt;name&gt;_I", "&lt;name&gt;_U" and "&lt;name&gt;_D"
+        for every subscribed table.</member></simplelist>
 
-  </para>
-      </section>
+    </para>
+    </section>
+</section>
+    <section xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://docbook.org/ns/docbook" xml:id="rdfreplication">
+      <title>RDF Replication</title>
+      <para>Virtuoso's native replication functionality for relations represented as tables cannot be applied naively to the DB.DBA.RDF_QUAD and DB.DBA.RDF_OBJt systems tables used by its RDF Data Management subsystem, due underlying operations such as 
+  	key-compression, caching, and special sequence objects that collectively optimize RDF working set in memory.</para>
+      <para>Moreover, IRIs in one instance may have different internal IRI_IDs compared to different instance, due to variations associated with underly record ordering. Similarly, there will be different IDs used to denote RDF literal, datatypes and languages,
+  	further impededing any attempt for making a naive one-to-one replication between RDF instances possible.</para>
+      <para>To solve these challenges, the replication system implements a special asynchronous RDF replication subsystem that enables configuration of a "publisher" instance that 
+  	logs changes (deltas) across a designated collection of RDF graphs to which other instances can subscribe by way of log replays i.e., each subscriber applies deltas on a per publication basis.</para>
+      <para>Set and configuration of this system is straightforward.</para>
+      <para>RDF graphs to be replicated are added to a special Graph Group denoted by the IRI &lt;http://www.openlinksw.com/schemas/virtrdf#rdf_repl_graph_group&gt;. This group functions like any other graph group, plus data security 
+  	checks performed by <link linkend="fn_rdf_repl_graph_ins"><function>DB.DBA.RDF_REPL_GRAPH_INS()</function></link> at data insert time and <link linkend="fn_rdf_repl_graph_del"><function>DB.DBA.RDF_REPL_GRAPH_DEL()</function></link> at removal time.</para>
+      <para>Only publicly readable graphs can be replicated, so an error is signalled otherwise.</para>
+      <para>The <link linkend="fn_rdf_repl_start"><function>DB.DBA.RDF_REPL_START()</function></link> function starts the RDF replication process on the publishing side. This involves creating a replication "publication" named '__rdf_repl' and an associated log file '__rdf_repl.log' for
+    recording changes (deltas) in graphs to be replicated. If replication has already commenced prior an error is signalled; note, passing value 1
+    for parameter "quiet" elimintaes the error so that such this kind of incorrect invocation sequence has no effect. If replication is enabled then
+    the value of the registry variable 'DB.DBA.RDF_REPL' indicates the moment of replication commencement.</para>
+      <para>The <link linkend="fn_rdf_repl_start"><function>DB.DBA.RDF_REPL_START()</function></link> function performs a security check before replication commences.</para>
+      <para>The <link linkend="fn_rdf_repl_stop"><function>DB.DBA.RDF_REPL_STOP()</function></link> stops the RDF replication on the publishing side by invoking the <link linkend="fn_repl_unpublish"><function>repl_unpublish()</function></link>; but doesn't make
+    empty the system "publication" named '__rdf_repl', instead, it makes a log file '__rdf_repl.log' to record changes in replicated graphs.</para>
+      <para>Replication is asynchronous and the order of insertion and removal operations at the subscriber's side may not match the order at the publisher. As a result, it is not recommended to make few subscriptions that writes changes of few
+  	publishers into one common graph. A client-side application can force the synchronuzation by calling <link linkend="fn_rdf_repl_sync"><function>DB.DBA.RDF_REPL_SYNC()</function></link> that acts like
+  	<link linkend="fn_repl_sync"><function>repl_sync()</function></link> but specifically for an RDF subscription.
+  	<link linkend="fn_rdf_repl_sync"><function>DB.DBA.RDF_REPL_SYNC()</function></link> will not only initialize synchronisation it will also wait for subscription completion so as to guarantee that the total effect of INSERT and DELETE operations is accurate even if these operations were made in an order that differs from the original.</para>
     </section>
     <!-- ======================================== -->
 
