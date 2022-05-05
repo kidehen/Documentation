@@ -2124,7 +2124,7 @@ or after each successful run of repl_purge() for this account.
     </section>
 </section>
     <section xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://docbook.org/ns/docbook" xml:id="rdfreplication">
-      <title>RDF Replication</title>
+      <title>RDF Data and Transaction Replication</title>
       <para>Virtuoso's native replication functionality for relations represented as tables cannot be applied naively to the DB.DBA.RDF_QUAD and DB.DBA.RDF_OBJt systems tables used by its RDF Data Management subsystem, due underlying operations such as 
   	key-compression, caching, and special sequence objects that collectively optimize RDF working set in memory.</para>
       <para>Moreover, IRIs in one instance may have different internal IRI_IDs compared to different instance, due to variations associated with underly record ordering. Similarly, there will be different IDs used to denote RDF literal, datatypes and languages,
