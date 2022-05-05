@@ -19,7 +19,7 @@
       <para>The <link linkend="fn_rdf_repl_stop"><function>DB.DBA.RDF_REPL_STOP()</function></link> stops the RDF replication on the publishing side by invoking the <link linkend="fn_repl_unpublish"><function>repl_unpublish()</function></link>; but doesn't make
     empty the system "publication" named '__rdf_repl', instead, it makes a log file '__rdf_repl.log' to record changes in replicated graphs.</para>
       <para>Replication is asynchronous and the order of insertion and removal operations at the subscriber's side may not match the order at the publisher. As a result, it is not recommended to make few subscriptions that writes changes of few
-  	publishers into one common graph. A client-side application can force the synchronuzation by calling <link linkend="fn_rdf_repl_sync"><function>DB.DBA.RDF_REPL_SYNC()</function></link> that acts like
+  	publishers into one common graph. A client-side application can force the synchronization by calling <link linkend="fn_rdf_repl_sync"><function>DB.DBA.RDF_REPL_SYNC()</function></link> that acts like
   	<link linkend="fn_repl_sync"><function>repl_sync()</function></link> but specifically for an RDF subscription.
   	<link linkend="fn_rdf_repl_sync"><function>DB.DBA.RDF_REPL_SYNC()</function></link> will not only initialize synchronisation it will also wait for subscription completion so as to guarantee that the total effect of INSERT and DELETE operations is accurate even if these operations were made in an order that differs from the original.</para>
     </section>
