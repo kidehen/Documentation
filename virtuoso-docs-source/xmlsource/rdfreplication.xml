@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <section xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://docbook.org/ns/docbook" xml:id="rdfreplication">
-      <title>RDF Replication</title>
+      <title>RDF Data and Transaction Replication</title>
       <para>Virtuoso's native replication functionality for relations represented as tables cannot be applied naively to the DB.DBA.RDF_QUAD and DB.DBA.RDF_OBJt systems tables used by its RDF Data Management subsystem, due underlying operations such as 
   	key-compression, caching, and special sequence objects that collectively optimize RDF working set in memory.</para>
       <para>Moreover, IRIs in one instance may have different internal IRI_IDs compared to different instance, due to variations associated with underly record ordering. Similarly, there will be different IDs used to denote RDF literal, datatypes and languages,
   	further impededing any attempt for making a naive one-to-one replication between RDF instances possible.</para>
       <para>To solve these challenges, the replication system implements a special asynchronous RDF replication subsystem that enables configuration of a "publisher" instance that 
-  	logs changes (deltas) across a designated collection of RDF graphs to which other instances can subscribe by way of log replays i.e., each subscriber applies deltas on a per publication basis.</para>
+  	logs changes across a designated collection of RDF graphs to which other instances can subscribe by way of log replays i.e., each subscriber applies transactions on a per publication basis.</para>
       <para>Set and configuration of this system is straightforward.</para>
       <para>RDF graphs to be replicated are added to a special Graph Group denoted by the IRI &lt;http://www.openlinksw.com/schemas/virtrdf#rdf_repl_graph_group&gt;. This group functions like any other graph group, plus data security 
   	checks performed by <link linkend="fn_rdf_repl_graph_ins"><function>DB.DBA.RDF_REPL_GRAPH_INS()</function></link> at data insert time and <link linkend="fn_rdf_repl_graph_del"><function>DB.DBA.RDF_REPL_GRAPH_DEL()</function></link> at removal time.</para>
       <para>Only publicly readable graphs can be replicated, so an error is signalled otherwise.</para>
       <para>The <link linkend="fn_rdf_repl_start"><function>DB.DBA.RDF_REPL_START()</function></link> function starts the RDF replication process on the publishing side. This involves creating a replication "publication" named '__rdf_repl' and an associated log file '__rdf_repl.log' for
-    recording changes (deltas) in graphs to be replicated. If replication has already commenced prior an error is signalled; note, passing value 1
+    recording changes in graphs to be replicated. If replication has already commenced prior an error is signalled; note, passing value 1
     for parameter "quiet" elimintaes the error so that such this kind of incorrect invocation sequence has no effect. If replication is enabled then
     the value of the registry variable 'DB.DBA.RDF_REPL' indicates the moment of replication commencement.</para>
       <para>The <link linkend="fn_rdf_repl_start"><function>DB.DBA.RDF_REPL_START()</function></link> function performs a security check before replication commences.</para>
